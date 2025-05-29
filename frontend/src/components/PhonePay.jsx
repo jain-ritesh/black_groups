@@ -18,7 +18,7 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:4000/api/create-payment', {
+      const response = await fetch('https://black-groups-backend.onrender.com/api/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: parsedAmount }),
