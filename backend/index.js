@@ -5,7 +5,7 @@ import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from 'pg-sdk-
 import { randomUUID } from 'crypto';
 
 const app = express();
-app.use(cors());
+// app.use(cors());
 app.use(bodyParser.json());
 app.use(cors({
     origin: process.env.FRONTEND_URL, // React frontend ka URL
