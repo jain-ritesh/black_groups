@@ -7,6 +7,25 @@ import { randomUUID } from 'crypto';
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // React frontend ka URL
+    credentials: true, 
+}));
+
+// const allowedOrigins = ['https://blackgrapesgroup.com/']; // replace with your actual domain
+
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // allow requests with no origin like mobile apps or curl
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('CORS not allowed from this origin: ' + origin));
+//     }
+//   },
+//   credentials: true,
+// }));
+
 
 // Your PhonePe credentials here
 const clientId = "TEST-M22SBE31INURY_25041";
@@ -21,7 +40,7 @@ app.post('/api/create-payment', async (req, res) => {
   try {
     const merchantOrderId = randomUUID();
     const amount = req.body.amount || 100;  // amount in paise
-    const redirectUrl = "http://localhost:3000/payment-callback";
+    const redirectUrl = `${process.env.FRONTEND_URL}/payment-callback`;
 
     const request = StandardCheckoutPayRequest.builder()
       .merchantOrderId(merchantOrderId)
