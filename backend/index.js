@@ -6,26 +6,26 @@ import { randomUUID } from 'crypto';
 
 const app = express();
 // app.use(cors());
-app.use(bodyParser.json());
-app.use(cors({
-    origin: process.env.FRONTEND_URL, // React frontend ka URL
-    credentials: true, 
-}));
-
-// const allowedOrigins = ['https://blackgrapesgroup.com/']; // replace with your actual domain
-
 // app.use(cors({
-//   origin: function (origin, callback) {
-//     // allow requests with no origin like mobile apps or curl
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('CORS not allowed from this origin: ' + origin));
-//     }
-//   },
-//   credentials: true,
+//     origin: process.env.FRONTEND_URL, // React frontend ka URL
+//     credentials: true, 
 // }));
 
+const allowedOrigins = ['https://black-grapes-groups.onrender.com']; // replace with your actual domain
+
+app.use(cors({
+  origin: function (origin, callback) {
+      
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed from this origin: ' + origin));
+    }
+  },
+  credentials: true,
+}));
+
+app.use(bodyParser.json());
 
 // Your PhonePe credentials here
 const clientId = "TEST-M22SBE31INURY_25041";
