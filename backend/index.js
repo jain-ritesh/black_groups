@@ -28,10 +28,11 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Your PhonePe credentials here
-const clientId = "TEST-M22SBE31INURY_25041";
-const clientSecret = "NmYxMDllN2YtY2Q0YS00NTBkLTk0NDQtZjc5OGQ5NGFhNGZi";
+const clientId = process.env.MERCHANT_ID;
+const clientSecret = process.env.SALT_KEY;
 const clientVersion = 1;
-const env = Env.SANDBOX;  // Change to Env.PRODUCTION for live
+// const env = Env.SANDBOX;  // Change to Env.PRODUCTION for live
+const env = Env.PRODUCTION;
 
 const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, env);
 
