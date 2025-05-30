@@ -28,8 +28,8 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Your PhonePe credentials here
-const clientId = process.env.MERCHANT_ID;
-const clientSecret = process.env.SALT_KEY;
+const clientId = "M22SBE31INURY";
+const clientSecret = "618fa17f-c54c-4aff-9f5b-8e10b3e835f2";
 const clientVersion = 1;
 // const env = Env.SANDBOX;  // Change to Env.PRODUCTION for live
 const env = Env.PRODUCTION;
