@@ -11,7 +11,7 @@ const app = express();
 //     credentials: true, 
 // }));
 
-const allowedOrigins = ['https://black-grapes-groups.onrender.com']; // replace with your actual domain
+const allowedOrigins = ['https://black-groups-front.onrender.com']; // replace with your actual domain
 
 app.use(cors({
   origin: function (origin, callback) {
