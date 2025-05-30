@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from 'pg-sdk-node';
 import { randomUUID } from 'crypto';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 // app.use(cors());
@@ -99,7 +101,7 @@ app.post('/api/phonepe-callback', (req, res) => {
   }
 });
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
