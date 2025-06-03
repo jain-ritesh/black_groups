@@ -2,16 +2,16 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { StandardCheckoutClient, Env, StandardCheckoutPayRequest } from 'pg-sdk-node';
 import { randomUUID } from 'crypto';
+import axios from 'axios';
+import crypto from 'crypto';
 
-dotenv.config(); // Load .env before anything else
+dotenv.config(); // Load .env
 
 const app = express();
 
 // ----------------- CORS ------------------
 const allowedOrigins = ['https://black-groups-front.onrender.com'];
-
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -23,89 +23,57 @@ app.use(cors({
   },
   credentials: true,
 }));
-
 app.use(bodyParser.json());
 
-// ----------------- PHONEPE SETUP ------------------
-const clientId = process.env.MERCHANT_ID || "M22SBE31INURY";
-const clientSecret = process.env.SALT_KEY || "618fa17f-c54c-4aff-9f5b-8e10b3e835f2";
-const clientVersion = parseInt(process.env.SALT_INDEX || '1', 10);
-const frontendUrl = process.env.FRONTEND_URL || "https://black-groups-front.onrender.com";
-const env = Env.PRODUCTION; // For live
-
-const client = StandardCheckoutClient.getInstance(clientId, clientSecret, clientVersion, env);
+// ----------------- ENV VARIABLES ------------------
+const MERCHANT_ID = process.env.MERCHANT_ID || "M22SBE31INURY";
+const SALT_KEY = process.env.SALT_KEY || "618fa17f-c54c-4aff-9f5b-8e10b3e835f2";
+const SALT_INDEX = process.env.SALT_INDEX || "1";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://black-groups-front.onrender.com";
+const PHONEPE_API_HOST = "https://api.phonepe.com/apis/hermes/pg/v1/pay";
 
 // ----------------- CREATE PAYMENT ------------------
 app.post('/api/create-payment', async (req, res) => {
   try {
-    const merchantOrderId = randomUUID();
+    const merchantTransactionId = randomUUID();
     const amount = req.body.amount || 100; // in paise
-    const redirectUrl = `${frontendUrl}/payment-callback`;
+    const redirectUrl = `${FRONTEND_URL}/payment-callback`;
 
-    console.log("Creating payment with:");
-    console.log("Amount:", amount);
-    console.log("Order ID:", merchantOrderId);
-    console.log("Redirect URL:", redirectUrl);
+    const payload = {
+      merchantId: MERCHANT_ID,
+      merchantTransactionId,
+      merchantUserId: "user_" + merchantTransactionId,
+      amount,
+      redirectUrl,
+      redirectMode: "POST",
+      callbackUrl: redirectUrl,
+      paymentInstrument: {
+        type: "PAY_PAGE"
+      }
+    };
 
-    const request = StandardCheckoutPayRequest.builder()
-      .merchantOrderId(merchantOrderId)
-      .amount(amount)
-      .redirectUrl(redirectUrl)
-      .build();
+    const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
+    const xVerify = crypto
+      .createHash('sha256')
+      .update(base64Payload + "/pg/v1/pay" + SALT_KEY)
+      .digest("hex") + `###${SALT_INDEX}`;
 
-    const response = await client.pay(request);
-
-    console.log("Payment link created:", response.redirectUrl);
-
-    res.json({
-      merchantOrderId,
-      redirectUrl: response.redirectUrl,
+    const response = await axios.post(PHONEPE_API_HOST, {
+      request: base64Payload
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-VERIFY': xVerify,
+        'X-MERCHANT-ID': MERCHANT_ID
+      }
     });
+
+    const redirectUrlResp = response?.data?.data?.instrumentResponse?.redirectInfo?.url;
+    res.json({ merchantTransactionId, redirectUrl: redirectUrlResp });
+
   } catch (error) {
-    console.error("Error during /api/create-payment:", error);
-    res.status(500).json({ error: "Failed to create payment", details: error?.message });
-  }
-});
-
-// ----------------- ORDER STATUS ------------------
-app.get('/api/order-status/:merchantOrderId', async (req, res) => {
-  try {
-    console.log("Checking status for order:", req.params.merchantOrderId);
-    const statusResponse = await client.getOrderStatus(req.params.merchantOrderId);
-    res.json(statusResponse);
-  } catch (error) {
-    console.error("Error fetching order status:", error);
-    res.status(500).json({ error: "Failed to fetch order status", details: error?.message });
-  }
-});
-
-// ----------------- CALLBACK HANDLER ------------------
-// Optional: Validate callback if you configure it in PhonePe
-app.post('/api/phonepe-callback', (req, res) => {
-  try {
-    const authorizationHeader = req.headers['authorization'];
-    const callbackBody = JSON.stringify(req.body);
-
-    // OPTIONAL — Only use if you enable basic auth in PhonePe callback settings
-    const username = process.env.PHONEPE_CALLBACK_USERNAME || '';
-    const password = process.env.PHONEPE_CALLBACK_PASSWORD || '';
-
-    if (username && password) {
-      const callbackResponse = client.validateCallback(
-        username,
-        password,
-        authorizationHeader,
-        callbackBody
-      );
-      console.log("Validated callback response:", callbackResponse);
-    } else {
-      console.log("Callback received (no validation):", req.body);
-    }
-
-    res.status(200).send("OK");
-  } catch (error) {
-    console.error("Invalid callback or validation error:", error);
-    res.status(400).send("Invalid callback");
+    console.error("Error during /api/create-payment:", error.response?.data || error.message);
+    res.status(500).json({ error: "Payment initiation failed", details: error.message });
   }
 });
 
