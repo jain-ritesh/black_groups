@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
 // ----------------- CORS ------------------
-const allowedOrigins = ['https://black-groups-front.onrender.com'];
+const allowedOrigins = ['https://blackgrapesgroup.com'];
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -29,7 +29,7 @@ app.use(bodyParser.json());
 const MERCHANT_ID = process.env.MERCHANT_ID || "M22SBE31INURY";
 const SALT_KEY = process.env.SALT_KEY || "618fa17f-c54c-4aff-9f5b-8e10b3e835f2";
 const SALT_INDEX = process.env.SALT_INDEX || "1";
-const FRONTEND_URL = "https://black-groups-front.onrender.com";
+const FRONTEND_URL = "https://blackgrapesgroup.com";
 const PHONEPE_API_HOST = "https://api.phonepe.com/apis/hermes/pg/v1/pay";
 
 // ----------------- CREATE PAYMENT ------------------
